@@ -1,59 +1,71 @@
 package org.example;
 
-import javax.mail.Message;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
+import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import java.util.Properties;
 
-
 public class SendEmail {
 
     public void mandarCorreo() {
         // El correo gmail de envío
-        String correoEnvia = "user";
-        String claveCorreo = "password";
+        String correoEnvia = "josearanda9000@gmail.com";
+        // La contraseña google
+        String claveCorreo = "mbgn mzpp phoj knlf";
+
+        // Destinatarios del correo
+        String[] destinatarios = {
+                "benje1612@gmail.com",
+                "josearanda9000@gmail.com"
+        };
+
+        // Asunto y cuerpo del mensaje
+        String asunto = "Saludos desde Java";
+        String cuerpoMensaje = "Hola,\n\nEste es un correo enviado desde una aplicación Java utilizando JavaMail.\n\n¡Saludos!";
+
 
         // La configuración para enviar correo
         Properties properties = new Properties();
         properties.put("mail.smtp.host", "smtp.gmail.com");
+        properties.put("mail.smtp.port", "587");
+        properties. put("mail.smtp.auth", "true");
         properties.put("mail.smtp.starttls.enable", "true");
+        properties.put("mail.smtp.starttls.required", "true");
         properties.put("mail.smtp.ssl.protocols", "TLSv1.2");
         properties.put("mail.smtp.ssl.trust", "smtp.gmail.com");
-        properties.put("mail.smtp.port", "587");
-        properties.put("mail.smtp.auth", "true");
-        properties.put("mail.user", correoEnvia);
-        properties.put("mail.password", claveCorreo);
 
-        // Obtener la sesion
-        Session session = Session.getInstance(properties, null);
+        // Crear la sesión con autenticación
+        Session session = Session.getInstance(properties, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(correoEnvia, claveCorreo);
+            }
+        });
 
         try {
             // Crear el cuerpo del mensaje
             MimeMessage mimeMessage = new MimeMessage(session);
 
             // Agregar quien envía el correo
-            mimeMessage.setFrom(new InternetAddress(correoEnvia));
+            mimeMessage. setFrom(new InternetAddress(correoEnvia));
 
             // Los destinatarios
-            InternetAddress[] internetAddresses = {
-                    new InternetAddress("para1@gmail.com"),
-                    new InternetAddress("para2@gmail.com")};
+            InternetAddress[] internetAddresses = new InternetAddress[destinatarios. length];
+            for (int i = 0; i < destinatarios.length; i++) {
+                internetAddresses[i] = new InternetAddress(destinatarios[i]);
+            }
 
             // Agregar los destinatarios al mensaje
-            mimeMessage.setRecipients(Message.RecipientType.TO,
-                    internetAddresses);
+            mimeMessage. setRecipients(Message.RecipientType.TO, internetAddresses);
 
             // Agregar el asunto al correo
-            mimeMessage.setSubject("Subject");
+            mimeMessage.setSubject(asunto, "UTF-8");
 
-            // Creo la parte del mensaje
+            // Crear la parte del mensaje
             MimeBodyPart mimeBodyPart = new MimeBodyPart();
-            mimeBodyPart.setText("Body.");
+            mimeBodyPart.setText(cuerpoMensaje, "UTF-8");
 
             // Crear el multipart para agregar la parte del mensaje anterior
             Multipart multipart = new MimeMultipart();
@@ -63,15 +75,18 @@ public class SendEmail {
             mimeMessage.setContent(multipart);
 
             // Enviar el mensaje
-            Transport transport = session.getTransport("smtp");
-            transport.connect(correoEnvia, claveCorreo);
-            transport.sendMessage(mimeMessage, mimeMessage.getAllRecipients());
-            transport.close();
+            Transport. send(mimeMessage);
 
-        } catch (Exception ex) {
+            System.out.println(" Correo enviado exitosamente desde " + correoEnvia);
+            System.out.println(" Destinatarios: ");
+            for (String dest : destinatarios) {
+                System.out.println("   - " + dest);
+            }
+
+        } catch (MessagingException ex) {
+            System.err.println(" Error al enviar el correo:");
             ex.printStackTrace();
         }
-        System.out.println("Acabo de enviar un correo desde " + correoEnvia);
     }
 
     public static void main(String[] args) {
